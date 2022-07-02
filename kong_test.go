@@ -2,6 +2,7 @@ package kong_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -948,6 +949,35 @@ func TestXorRequiredMany(t *testing.T) {
 	p = mustNew(t, &cli)
 	_, err = p.Parse([]string{})
 	require.EqualError(t, err, "missing flags: --one or --two or --three")
+}
+
+func TestXorAcrossFlagsAndArgs(t *testing.T) {
+	var cli struct {
+		One   bool `xor:"val"`
+		Two   bool `xor:"val"`
+		Three bool `xor:"val"`
+		FreeForm int `arg:"" optional:"" xor:"val"`
+	}
+	p := mustNew(t, &cli)
+	_, err := p.Parse([]string{"--one"})
+	require.NoError(t, err)
+
+	p = mustNew(t, &cli)
+	_, err = p.Parse([]string{"--three"})
+	require.NoError(t, err)
+
+	p = mustNew(t, &cli)
+	_, err = p.Parse([]string{"8"})
+	require.NoError(t, err)
+
+	p = mustNew(t, &cli)
+	ctx, err := p.Parse([]string{"--two","8"})
+
+	ctxData, jerr := json.MarshalIndent(ctx, "", "    ")
+	require.NoError(t, jerr)
+	fmt.Printf("context: \n%s\n", string(ctxData))
+	require.Error(t, err)
+
 }
 
 func TestEnumSequence(t *testing.T) {

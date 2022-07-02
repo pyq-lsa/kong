@@ -261,6 +261,7 @@ func buildField(k *Kong, node *Node, v reflect.Value, ft reflect.StructField, fv
 		Target:       fv,
 		Enum:         tag.Enum,
 		Passthrough:  tag.Passthrough,
+		Xor:          tag.Xor,
 
 		// Flags are optional by default, and args are required by default.
 		Required: (!tag.Arg && tag.Required) || (tag.Arg && !tag.Optional),

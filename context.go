@@ -915,16 +915,35 @@ func checkPassthroughArg(target reflect.Value) bool {
 
 func checkXorDuplicates(paths []*Path) error {
 	for _, path := range paths {
-		seen := map[string]*Flag{}
+		seenPositional := map[string]*Positional{}
+		if path.Positional != nil && path.Positional.Set {
+			// set these up to compare in future checks
+			for _, xor := range path.Positional.Xor {
+				seenPositional[xor] = path.Positional
+			}
+		}
+		seenArg := map[string]*Argument{}
+		if path.Argument != nil && path.Argument.Argument != nil && path.Argument.Argument.Set {
+			// set these up to compare in future checks
+			for _, xor := range path.Argument.Argument.Xor {
+				seenArg[xor] = path.Argument
+			}
+		}
+		seenFlags := map[string]*Flag{}
 		for _, flag := range path.Flags {
 			if !flag.Set {
 				continue
 			}
+			
 			for _, xor := range flag.Xor {
-				if seen[xor] != nil {
-					return fmt.Errorf("--%s and --%s can't be used together", seen[xor].Name, flag.Name)
+				if seenFlags[xor] != nil {
+					return fmt.Errorf("--%s and --%s can't be used together", seenFlags[xor].Name, flag.Name)
+				} else if seenPositional[xor] != nil {
+					return fmt.Errorf("--%s and positional [%s] can't be used together", flag.Name, seenPositional[xor].Name)
+				} else if seenArg[xor] != nil {
+					return fmt.Errorf("--%s and argument [%s] can't be used together", flag.Name, seenArg[xor].Argument.Name)
 				}
-				seen[xor] = flag
+				seenFlags[xor] = flag
 			}
 		}
 	}

@@ -243,6 +243,7 @@ type Value struct {
 	Format       string // Formatting directive, if applicable.
 	Position     int    // Position (for positional arguments).
 	Passthrough  bool   // Set to true to stop flag parsing when encountered.
+	Xor          []string
 }
 
 // EnumMap returns a map of the enums in this value.
